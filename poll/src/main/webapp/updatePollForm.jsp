@@ -12,6 +12,7 @@
 	
 	QuestionDao questionDao = new QuestionDao();
 	ItemDao itemDao = new ItemDao(); 
+	
 	//메소드 불러오기
 	HashMap<String,Object> map = questionDao.selectQuestion(id);
 
