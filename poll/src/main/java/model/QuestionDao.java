@@ -260,10 +260,43 @@ public class QuestionDao {
     }
     
 
-    private Connection getConnection() throws SQLException, ClassNotFoundException {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection("jdbc:mysql://localhost:3306/poll", "root", "java1234");
+    // 데이터베이스 연결을 위한 메소드
+     private Connection getConnection() throws SQLException {
+        // 실제 데이터베이스 연결 정보로 변경해야 합니다.
+        String url = "jdbc:mysql://localhost:3306/poll";
+        String username = "root";
+        String password = "java1234";
+        return DriverManager.getConnection(url, username, password);
+    }
+
+    // 설문 질문을 데이터베이스에서 업데이트하는 메소드
+    public boolean updateQuestion(Question question) throws SQLException {
+        // SQL 쿼리: 기존 질문을 업데이트
+        String sql = "UPDATE questions SET title = ?, startdate = ?, enddate = ?, type = ? WHERE id = ?";
+        boolean result = false;
+        
+        // 데이터베이스 연결과 PreparedStatement 객체 생성
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // 쿼리의 파라미터 설정
+            stmt.setString(1, question.getTitle());
+            stmt.setString(2, question.getStartdate());
+            stmt.setString(3, question.getEnddate());
+            stmt.setInt(4, question.getType());  // type은 정수형으로 설정
+            stmt.setInt(5, question.getNum());    // 질문의 ID로 업데이트할 데이터 지정
+            
+            // 쿼리 실행
+            int rowsAffected = stmt.executeUpdate();
+            
+            // 쿼리가 성공적으로 실행되었으면 true 반환
+            if (rowsAffected > 0) {
+                result = true;  // 질문 업데이트 성공
+            }
         }
+
+        return result;  // 업데이트 성공 여부 반환
+    }
 
     public boolean updateEndDate(int questionId, String newEndDate) throws SQLException, ClassNotFoundException {
             boolean isUpdated = false;
