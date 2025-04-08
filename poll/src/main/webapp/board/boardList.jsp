@@ -182,7 +182,7 @@
         <button type="submit" class="btn btn-warning">검색</button>
     </form>
     <!-- 전체 목록으로 돌아가기 버튼 -->
-    <a href="boardList.jsp" class="btn btn-outline-secondary ms-3">전체 목록</a>
+    <a href="boardList.jsp" class="btn btn-outline-secondary ms-3">전체목록</a>
 </div>
 
 </body>
