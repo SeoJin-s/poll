@@ -7,6 +7,26 @@ public class Paging {
 	private String searchWord;
 	private String orderBy;		// subject, regdate..
 	private String orderDir;	// asc, desc
+	private int totalRow;
+	private int totalPage;
+	
+	public int getTotalRow() {
+		return totalRow;
+	}
+	public void setTotalRow(int totalRow) {
+		this.totalRow = totalRow;
+	}
+	public int getTotalPage() {
+		return totalPage;
+	}
+	public void setTotalPage(int totalPage) {
+		this.totalPage = totalPage;
+	}
+	public int getPageBlock() {
+		return pageBlock;
+	}
+
+	private final int pageBlock = 5; // 한 블럭에 표시할 페이지 수
 	
 	public int getCurrentPage() {
 		return currentPage;
@@ -24,13 +44,14 @@ public class Paging {
 		this.searchWord = searchWord;
 	}
 	public String getOrderBy() {
-		return orderBy;
+	    return (orderBy == null || orderBy.isEmpty()) ? "ref" : orderBy;
 	}
+
 	public void setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
 	}
 	public String getOrderDir() {
-		return orderDir;
+	    return (orderDir == null || orderDir.isEmpty()) ? "desc" : orderDir;
 	}
 	public void setOrderDir(String orderDir) {
 		this.orderDir = orderDir;
@@ -55,5 +76,18 @@ public class Paging {
 			lastPage = lastPage+1;
 		}
 		return lastPage;
+	}
+
+	public int getStartPage(int totalRow) {
+	    int totalPage = getLastPage(totalRow);
+	    int blockSize = 5;
+	    return ((currentPage - 1) / blockSize) * blockSize + 1;
+	}
+
+	public int getEndPage(int totalRow) {
+	    int totalPage = getLastPage(totalRow);
+	    int blockSize = 5;
+	    int endPage = getStartPage(totalRow) + blockSize - 1;
+	    return endPage > totalPage ? totalPage : endPage;
 	}
 }

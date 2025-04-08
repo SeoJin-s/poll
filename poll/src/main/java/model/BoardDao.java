@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import dto.Board;
 import dto.Paging;
@@ -106,10 +108,23 @@ public class BoardDao {
 		        where = " WHERE " + p.getSearchType() + " LIKE ?";
 		    }
 
-		    String order = " ORDER BY " +
-		                   (p.getOrderBy() != null ? p.getOrderBy() : "ref") + " " +
-		                   (p.getOrderDir() != null ? p.getOrderDir() : "DESC") + ", pos ASC";
+		    // 정렬 기준과 방향을 디폴트 값으로 설정 (보안 체크)
+		    String orderBy = p.getOrderBy() != null && !p.getOrderBy().isEmpty() ? p.getOrderBy() : "ref";
+		    String orderDir = p.getOrderDir() != null && !p.getOrderDir().isEmpty() ? p.getOrderDir() : "DESC";
 
+		    // 허용된 필드만 사용 (보안적 측면에서 체크)
+		    List<String> allowedOrderBy = Arrays.asList("ref", "subject", "count");
+		    if (!allowedOrderBy.contains(orderBy)) {
+		        orderBy = "ref"; // 기본값 ref로 설정
+		    }
+
+		    List<String> allowedOrderDir = Arrays.asList("asc", "desc");
+		    if (!allowedOrderDir.contains(orderDir)) {
+		        orderDir = "desc"; // 기본값 desc로 설정
+		    }
+
+		    // ORDER BY, LIMIT 문자열 생성
+		    String order = " ORDER BY " + orderBy + " " + orderDir + ", pos ASC";
 		    String limit = " LIMIT ?, ?";
 
 		    String sql = baseSql + where + order + limit;
@@ -119,9 +134,13 @@ public class BoardDao {
 		        PreparedStatement stmt = conn.prepareStatement(sql);
 		    ) {
 		        int idx = 1;
+
+		        // 검색어가 있을 경우 처리
 		        if (!where.isEmpty()) {
 		            stmt.setString(idx++, "%" + p.getSearchWord() + "%");
 		        }
+
+		        // 페이징 처리: 시작 행과 한 페이지당 행 개수
 		        stmt.setInt(idx++, p.getBeginRow());
 		        stmt.setInt(idx, p.getRowPerPage());
 
@@ -177,20 +196,37 @@ public class BoardDao {
 		return b;
 	}
 
-	public int deleteBoard(int num) throws SQLException {
-		String sql = "DELETE FROM board WHERE num = ?";
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll", "root", "java1234");
-		PreparedStatement pstmt = conn.prepareStatement(sql);
-		pstmt.setInt(1, num);
-		int result = pstmt.executeUpdate();
+	public void deleteBoard(int num) throws ClassNotFoundException, SQLException {
+	    Class.forName("com.mysql.cj.jdbc.Driver");
 
-		// 리소스 정리 (명시적으로 닫아주기)
-		pstmt.close();
-		conn.close();
+	    // 연결 객체 선언
+	    Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll", "root", "java1234");
+	    PreparedStatement stmt1 = null;
+	    PreparedStatement stmt2 = null;
 
-		return result;
+	    // 트랜잭션 시작
+	    conn.setAutoCommit(false);
+
+	    // 1. DELETE 쿼리: 특정 num에 해당하는 게시글 삭제
+	    String sql1 = "DELETE FROM board WHERE num = ?";
+	    stmt1 = conn.prepareStatement(sql1);
+	    stmt1.setInt(1, num);
+	    stmt1.executeUpdate();
+
+	    // 2. UPDATE 쿼리: 삭제된 부모글(ref)과 같은 ref를 가진 다른 게시글들의 content를 변경
+	    String sql2 = "UPDATE board SET subject = '삭제된 글입니다.' WHERE ref = ?";
+	    stmt2 = conn.prepareStatement(sql2);
+	    stmt2.setInt(1, num); // 삭제된 부모글의 ref 값을 사용
+	    stmt2.executeUpdate();
+
+	    // 트랜잭션 커밋
+	    conn.commit();
+
+	    // 자원 해제
+	    stmt1.close();
+	    stmt2.close();
+	    conn.close();
 	}
-	
 	public int updateBoard(Board b) throws SQLException {
 	String sql = "UPDATE board SET name = ?, subject = ?, content = ? WHERE num = ?";
 	Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll", "root", "java1234");
@@ -208,5 +244,36 @@ public class BoardDao {
 	
 	return result;
 	}
-}	
 	
+	
+	public int getTotalRow(Paging p) throws Exception {
+	    int total = 0;
+	    Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll", "root", "java1234");
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+
+	    String sql = "SELECT COUNT(*) FROM board WHERE 1=1";
+	    if (p.getSearchType() != null && !p.getSearchType().isEmpty() &&
+	        p.getSearchWord() != null && !p.getSearchWord().isEmpty()) {
+	        sql += " AND " + p.getSearchType() + " LIKE ?";
+	    }
+
+	    stmt = conn.prepareStatement(sql);
+
+	    if (p.getSearchType() != null && !p.getSearchType().isEmpty() &&
+	        p.getSearchWord() != null && !p.getSearchWord().isEmpty()) {
+	        stmt.setString(1, "%" + p.getSearchWord() + "%");
+	    }
+
+	    rs = stmt.executeQuery();
+	    if (rs.next()) {
+	        total = rs.getInt(1);
+	    }
+
+	    rs.close();
+	    stmt.close();
+	    conn.close();
+	    return total;
+	}
+	
+}	
