@@ -5,16 +5,25 @@
 <%@ page import="java.util.*" %>
 
 <%
+	String searchType = request.getParameter("searchType");
+	String searchWord = request.getParameter("searchWord");
+	String orderBy = request.getParameter("orderBy");
+	String orderDir = request.getParameter("orderDir");
+	
 	int currentPage = 1;
 	if(request.getParameter("currentPage") != null) {
 		currentPage = Integer.parseInt(request.getParameter("currentPage"));
 		if (currentPage < 1) currentPage = 1;
 	}
-
-	BoardDao boardDao = new BoardDao();
 	Paging p = new Paging();
 	p.setCurrentPage(currentPage);
 	p.setRowPerPage(10);
+    p.setSearchType(searchType);
+    p.setSearchWord(searchWord);
+    p.setOrderBy(orderBy);
+    p.setOrderDir(orderDir);
+	
+    BoardDao boardDao = new BoardDao();
 	ArrayList<Board> list = boardDao.selectBoardList(p);
 %>
 
@@ -153,6 +162,28 @@
 			</tbody>
 		</table>
 	</div>
+	<div class="d-flex justify-content-center mb-4">
+    <form method="get" class="d-flex flex-wrap align-items-center gap-2">
+        <select name="searchType" class="form-select w-auto">
+            <option value="subject">제목</option>
+            <option value="name">작성자</option>
+        </select>
+        <input type="text" name="searchWord" class="form-control w-25" placeholder="검색어"
+               value="<%= searchWord != null ? searchWord : "" %>">
+        <select name="orderBy" class="form-select w-auto">
+            <option value="ref">작성일</option>
+            <option value="subject">제목</option>
+            <option value="count">조회수</option>
+        </select>
+        <select name="orderDir" class="form-select w-auto">
+            <option value="desc">내림차순</option>
+            <option value="asc">오름차순</option>
+        </select>
+        <button type="submit" class="btn btn-warning">검색</button>
+    </form>
+    <!-- 전체 목록으로 돌아가기 버튼 -->
+    <a href="boardList.jsp" class="btn btn-outline-secondary ms-3">전체 목록</a>
+</div>
 
 </body>
 </html>

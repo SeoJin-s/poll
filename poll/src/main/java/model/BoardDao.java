@@ -96,33 +96,54 @@ public class BoardDao {
 	
 	
 	
-	public ArrayList<Board> selectBoardList(Paging p) throws ClassNotFoundException, SQLException {
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-		String sql = "select * from board order by ref desc, pos limit ?,?";
-		conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll","root","java1234");
-		stmt = conn.prepareStatement(sql);
-		stmt.setInt(1, p.getbeginRow());
-		stmt.setInt(2, p.getRowPerPage());
-		rs = stmt.executeQuery();
-		ArrayList<Board> list = new ArrayList<>();
-		// rs -> list 가 됨
-		while(rs.next()) {
-			Board b = new Board();
-			b.setNum(rs.getInt("num"));
-			b.setName(rs.getString("name"));
-			b.setSubject(rs.getString("subject"));
-			b.setPos(rs.getInt("pos"));
-			b.setRef(rs.getInt("ref"));
-			b.setDepth(rs.getInt("depth"));
-			b.setCount(rs.getInt("count"));
-			list.add(b);
+		public ArrayList<Board> selectBoardList(Paging p) throws ClassNotFoundException, SQLException {
+		    ArrayList<Board> list = new ArrayList<>();
+		    Class.forName("com.mysql.cj.jdbc.Driver");
+
+		    String baseSql = "SELECT * FROM board";
+		    String where = "";
+		    if (p.getSearchWord() != null && !p.getSearchWord().isEmpty()) {
+		        where = " WHERE " + p.getSearchType() + " LIKE ?";
+		    }
+
+		    String order = " ORDER BY " +
+		                   (p.getOrderBy() != null ? p.getOrderBy() : "ref") + " " +
+		                   (p.getOrderDir() != null ? p.getOrderDir() : "DESC") + ", pos ASC";
+
+		    String limit = " LIMIT ?, ?";
+
+		    String sql = baseSql + where + order + limit;
+
+		    try (
+		        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll", "root", "java1234");
+		        PreparedStatement stmt = conn.prepareStatement(sql);
+		    ) {
+		        int idx = 1;
+		        if (!where.isEmpty()) {
+		            stmt.setString(idx++, "%" + p.getSearchWord() + "%");
+		        }
+		        stmt.setInt(idx++, p.getBeginRow());
+		        stmt.setInt(idx, p.getRowPerPage());
+
+		        ResultSet rs = stmt.executeQuery();
+		        while (rs.next()) {
+		            Board b = new Board();
+		            b.setNum(rs.getInt("num"));
+		            b.setName(rs.getString("name"));
+		            b.setSubject(rs.getString("subject"));
+		            b.setContent(rs.getString("content"));
+		            b.setRegdate(rs.getString("regdate"));
+		            b.setRef(rs.getInt("ref"));
+		            b.setPos(rs.getInt("pos"));
+		            b.setDepth(rs.getInt("depth"));
+		            b.setCount(rs.getInt("count"));
+		            list.add(b);
+		        }
+		        rs.close();
+		    }
+
+		    return list;
 		}
-		return list;
-		
-	}
 
 	public Board selectBoardOne(int num) throws ClassNotFoundException, SQLException {
 		Board b = null;
