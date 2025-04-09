@@ -70,7 +70,7 @@ public class QuestionDao {
 		conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/poll","root","java1234");
 		
 		stmt = conn.prepareStatement(sql);
-		stmt.setInt(1, p.getbeginRow());
+		stmt.setInt(1, p.getBeginRow());
 		stmt.setInt(2, p.getRowPerPage());
 		
 		// 디버깅

@@ -63,6 +63,7 @@
 		<div class="d-grid gap-3">
 			<a href="/poll/pollList.jsp" class="btn btn-yellow">투표(설문)</a>
 			<a href="/poll/board/boardList.jsp" class="btn btn-yellow">게시판</a>
+			<a href="/poll/imageBoard/imageboardList.jsp" class="btn btn-yellow">이미지게시판</a>
 		</div>
 	</div>
 
