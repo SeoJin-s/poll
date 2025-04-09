@@ -19,8 +19,16 @@
 	// 2) 1의 결과에 확장자 추가
 	int dotLastPos = originalName.lastIndexOf("."); // 마지막 . 의 인덱스값 반환
 	System.out.println("dotLastPos: "+dotLastPos);
+	String ext = originalName.substring(dotLastPos);
 	
-	filename = filename + originalName.substring(dotLastPos);
+	// 유효성 검사 
+	// request 입력값이 맞는지 검사 안되면 메세지가 뜨고 반려
+	if(!ext.equals(".png")) {
+		response.sendRedirect("/poll/imageBoard/imageBoardForm.jsp?msg=ErrornNotPng");
+		return;	// jsp 코드진행을 종료
+	}
+	
+	filename = filename + originalName.substring(dotLastPos);	// 파일 확장자
 	System.out.println("filename: "+filename);
 	
 	Image img = new Image();

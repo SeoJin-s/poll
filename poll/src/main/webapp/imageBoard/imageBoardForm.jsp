@@ -75,7 +75,14 @@
 	<div class="nav-wrapper">
 		<jsp:include page="/inc/nav.jsp"></jsp:include>
 	</div>
-
+		<%
+			if(request.getParameter("msg") != null) {
+		%>
+				<div><%=request.getParameter("msg") %></div>
+		<% 		
+			}
+		
+		%>
 	<!-- 이미지 업로드 form -->
 	<div class="form-container">
 		<h1>이미지 업로드</h1>
